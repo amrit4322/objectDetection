@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection App</title>
+    <style>
+        #webcamFeed ,#downloadbtnid{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Object Detection App</h1>
+
+    <!-- Form for file upload and object detection -->
+    <form action="/objectDetectionFile" method="post" enctype="multipart/form-data">
+        <label for="fileInput">Upload a Video File:</label>
+        <input type="file" name="file" accept="video/*, .mov, .mp4, .avi" id="fileInput" required>
+        <button type="submit">Detect Objects in File</button>
+    </form>
+
+    <br>
+    <button id="downloadbtnid" onclick="downloadbtn()">Download the file</button>
+    <br><br>
+    <!-- Button for object detection using webcam -->
+    <button onclick="detectFromWebcam()">Detect Objects from Webcam</button>
+    <br>
+    <button onclick="stopObjectDetection()">Stop Object Detection</button>
+    <!-- Display area for webcam feed -->
+    <div id="webcamFeed">
+        <img id="live-stream" src=""  width="600px" height="550px" alt="Object Detection Live Stream">
+    </div>
+    <script  type="module">
+       
+        import { io } from "https://cdn.socket.io/4.7.2/socket.io.esm.min.js";
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('update_frame', function(data) {
+            document.getElementById('live-stream').src = 'data:image/jpeg;base64,' + data.image;
+            document.getElementById('webcamFeed').style.display ="block"
+        });
+        socket.on('completed', function(data) {
+            if (data.value=="done"){
+                document.getElementById('downloadbtnid').style.display ="block"
+                document.getElementById('webcamFeed').style.display ="none"
+            }
+            
+        });
+        
+        
+        
+    </script>
+    <script>
+        // Function to handle object detection from webcam
+        function detectFromWebcam() {
+            // Call the /objectDetectionWebCam endpoint using AJAX or fetch
+            fetch('/objectDetectionWebCam')
+            .then(response => {
+                if (response.ok) {
+                    console.log('Object detection from webcam initiated successfully.');
+                } else {
+                    console.error('Error:', response.status, response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error('Error during object detection from webcam:', error);
+            });
+        }
+        function stopObjectDetection() {
+            // Call the /stopObjectDetection endpoint using AJAX or fetch
+            
+            fetch('/stopObjectDetection')
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Object detection stopped successfully.');
+                        document.getElementById('webcamFeed').style.display ="none"
+                       
+                    } else {
+                        console.error('Error:', response.status, response.statusText);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error stopping object detection:', error);
+                });
+        }
+        function downloadbtn() {
+            // Call the /stopObjectDetection endpoint using AJAX or fetch
+            
+            fetch('http://127.0.0.1:5000/download')
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Downloading the file');
+                        
+                    } else {
+                        console.error('Error:', response.status, response.statusText);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error stopping object detection:', error);
+                });
+        }
+
+    </script>
+</body>
+</html>

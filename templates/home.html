@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection Webcam</title>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js" defer></script> -->
+</head>
+<body>
+    <img id="live-stream" src=""  alt="Object Detection Live Stream">
+    
+    <script  type="module">
+        console.log("check poit")
+        import { io } from "https://cdn.socket.io/4.7.2/socket.io.esm.min.js";
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('update_frame', function(data) {
+            document.getElementById('live-stream').src = 'data:image/jpeg;base64,' + data.image;
+        });
+    </script>
+</body>
+</html>
