@@ -1,0 +1,6 @@
+flask==2.1.1
+flask_SocketIO==5.3.6
+opencv_python==4.8.1.78
+ultralytics==8.0.229
+Werkzeug==2.0.1
+gunicorn==20.1.0

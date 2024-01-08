@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+    - "0.0.0.0:8000:8000"
+    networks:
+      my_network:
+        ipv4_address: 30.10.12.5
+
+networks:
+  my_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      config:
+        - subnet: 30.10.12.0/16
+          gateway: 30.10.12.1
