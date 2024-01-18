@@ -18,6 +18,91 @@ classes = []
 with open("coco.names", "r") as f:
     classes = [line.strip() for line in f.readlines()]
 
+focal_length = 1000 #will adjust this later
+
+# Placeholder values for average heights (in meters)
+average_heights = {
+    "person": 1.7,
+    "bicycle": 1.0,
+    "car": 1.5,
+    "motorcycle": 1.2,
+    "airplane": 3.0,
+    "bus": 3.5,
+    "train": 3.0,
+    "truck": 3.5,
+    "boat": 1.0,
+    "traffic light": 0.2,
+    "fire hydrant": 1.0,
+    "stop sign": 1.5,
+    "parking meter": 0.8,
+    "bench": 0.5,
+    "bird": 0.3,
+    "cat": 0.25,
+    "dog": 0.3,
+    "horse": 1.8,
+    "sheep": 0.9,
+    "cow": 1.4,
+    "elephant": 3.0,
+    "bear": 1.6,
+    "zebra": 1.5,
+    "giraffe": 5.0,
+    "backpack": 0.4,
+    "umbrella": 0.9,
+    "handbag": 0.2,
+    "tie": 0.2,
+    "suitcase": 0.5,
+    "frisbee": 0.2,
+    "skis": 1.8,
+    "snowboard": 1.6,
+    "sports ball": 0.2,
+    "kite": 1.0,
+    "baseball bat": 0.8,
+    "baseball glove": 0.2,
+    "skateboard": 0.2,
+    "surfboard": 1.8,
+    "tennis racket": 0.7,
+    "bottle": 0.2,
+    "wine glass": 0.2,
+    "cup": 0.1,
+    "fork": 0.2,
+    "knife": 0.2,
+    "spoon": 0.2,
+    "bowl": 0.2,
+    "banana": 0.2,
+    "apple": 0.2,
+    "sandwich": 0.1,
+    "orange": 0.2,
+    "broccoli": 0.3,
+    "carrot": 0.2,
+    "hot dog": 0.1,
+    "pizza": 0.2,
+    "donut": 0.1,
+    "cake": 0.3,
+    "chair": 0.5,
+    "couch": 0.7,
+    "potted plant": 0.4,
+    "bed": 0.6,
+    "dining table": 0.8,
+    "toilet": 0.4,
+    "tv": 0.3,
+    "laptop": 0.2,
+    "mouse": 0.1,
+    "remote": 0.1,
+    "keyboard": 0.1,
+    "cell phone": 0.1,
+    "microwave": 0.3,
+    "oven": 0.4,
+    "toaster": 0.1,
+    "sink": 0.2,
+    "refrigerator": 0.6,
+    "book": 0.3,
+    "clock": 0.2,
+    "vase": 0.4,
+    "scissors": 0.1,
+    "teddy bear": 0.5,
+    "hair drier": 0.1,
+    "toothbrush": 0.1
+}
 # Render the main HTML template
 @app.route("/")
 def index():
@@ -39,6 +124,10 @@ def object_detection_file():
         return redirect("/")
     else:
         return redirect("/")
+
+# Function to calculate distance between two objects
+def calculate_distance(known_height, focal_length, box_height):
+    return (known_height * focal_length) / box_height
 
 # Capture frames from the client's webcam via WebSocket
 @socketio.on('capture_frame')
@@ -74,6 +163,14 @@ def object_detection_thread_web(frame):
         for i, xyxy in enumerate(xyxys):
             if confidences[i] > 0.5:
                 label = str(classes[int(class_id[i])])
+                average_height = average_heights.get(label, 1.0)  # Use 1.0 as a default if not found
+
+                # Calculate distance
+                box_height = int(xyxy[3]) - int(xyxy[1])
+                distance = calculate_distance(average_height, focal_length, box_height)
+
+                        # Display distance on the frame
+                # cv2.putText(frame, f"Distance: {round(distance, 2)} meters", (int(xyxy[0]), int(xyxy[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 # Draw bounding box and label on the frame
                 cv2.rectangle(frame, (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3])), (0, 255, 0), 3) 
                 cv2.putText(frame, f"{label}: {confidences[i]:.2f}", (int(xyxy[0]), int(xyxy[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -116,9 +213,17 @@ def object_detection_thread(source=0, save=False):
             for i, xyxy in enumerate(xyxys):
                 if confidences[i] > 0.5:
                     label = str(classes[int(class_id[i])])
+                    average_height = average_heights.get(label, 1.0)  # Use 1.0 as a default if not found
+
+                    # Calculate distance
+                    box_height = int(xyxy[3]) - int(xyxy[1])
+                    distance = calculate_distance(average_height, focal_length, box_height)
+
+                    # Display distance on the frame
+                    # cv2.putText(frame, f"Distance: {round(distance, 2)} meters", (int(xyxy[0]), int(xyxy[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                     # Draw bounding box and label on the frame
                     cv2.rectangle(frame, (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3])), (0, 255, 0), 3) 
-                    cv2.putText(frame, f"{label}: {confidences[i]:.2f}", (int(xyxy[0]), int(xyxy[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                    cv2.putText(frame, f"{label}: {round(distance, 2)} meters", (int(xyxy[0]), int(xyxy[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (225, 255, 225), 2)
         
         if save:
             output_video.write(frame)
